@@ -79,7 +79,10 @@ with hardware and software metadata per architecture §10.
 
 | Gate | Status | Tolerance | Hardware | Date |
 |---|---|---|---|---|
-| FP32 selected-answer parity, real checkpoint | not yet run | selected answers must match exactly | — | — |
-| FP32 probability drift, real checkpoint | not yet run | TBD from first run | — | — |
+| FP32 selected-answer parity, real checkpoint | **pass** | selected answers match exactly; max probability diff 0.000e+00 | x86-64 CPU (PyTorch 2.14.0+cpu, transformers 5.17.0) | 2026-09-21 |
+| FP32 probability drift, real checkpoint | **pass** | 0.000e+00 encoder, logits, and action head vs pinned references | x86-64 CPU (PyTorch 2.14.0+cpu, transformers 5.17.0) | 2026-09-21 |
+| FP32 encoder parity vs transformers ModernBERT | **pass** | 0.000e+00 on valid positions, tiny and full-scale (28-layer, padded batches) | x86-64 CPU | 2026-09-21 |
+| FP32 full-model parity vs upstream laya DecisionModel | **pass** | 0.000e+00 logits and action values, all question types | x86-64 CPU | 2026-09-21 |
+| Padding invariance | **pass** | < 1e-6 (float nondeterminism only; same-kernel results identical) | x86-64 CPU | 2026-09-21 |
 | FP16 selected-answer parity | not yet run | TBD | — | — |
 | BF16 selected-answer parity | not yet run | TBD | — | — |

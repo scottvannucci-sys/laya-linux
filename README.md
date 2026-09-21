@@ -6,9 +6,12 @@ supplied state in a single bidirectional model forward pass and returns
 calibrated probabilities without generating text — entirely on your hardware,
 with no cloud calls, telemetry, or downloads.
 
-**Status: specification phase. No working release exists yet.** The two
-documents in this repository are the complete product specification and
-intended architecture; implementation follows them.
+**Status: Phase 1 complete — CPU reference runtime with bit-exact reference parity.** The FP32
+CPU runtime loads original Laya checkpoints with no weight-name mapping and matches Hugging Face
+transformers' ModernBERT and upstream Laya's `DecisionModel` to **0.0 max difference** (see
+[`PARITY_BASELINES.md`](PARITY_BASELINES.md)). CUDA, the private server, and packaging are
+specified and upcoming; implementation follows the phases in
+[`architecture.md`](architecture.md).
 
 ## Documents
 

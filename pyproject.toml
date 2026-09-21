@@ -1,0 +1,67 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "laya-linux"
+version = "0.1.0"
+description = "Local-first inference runtime for Laya typed-decision models on Linux"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Apache-2.0" }
+authors = [{ name = "laya-linux contributors" }]
+keywords = ["laya", "inference", "typed-decisions", "modernbert", "local-first"]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+# Core runtime dependencies per requirements §15. GPU-specific PyTorch builds are
+# installed by the user beforehand (CPU/CUDA/ROCm wheelhouse); never via extras.
+dependencies = [
+    "torch>=2.2",
+    "numpy>=1.26",
+    "safetensors>=0.4",
+    "tokenizers>=0.15",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "pytest-cov>=5",
+    "ruff>=0.5",
+    "build>=1.2",
+    "transformers>=4.48",  # reference implementation for parity tests only
+]
+
+[project.urls]
+Repository = "https://github.com/scottvannucci-sys/laya-linux"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+markers = [
+    "parity: tests comparing against reference implementations",
+    "real_checkpoint: tests requiring a locally staged real checkpoint",
+]
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]
+# UP031: percent-formatting is kept where ported upstream code uses it, so
+# prompt-building source stays textually close to the parity references.
+ignore = ["E501", "UP031"]
+
+[tool.ruff.lint.per-file-ignores]
+# torch = pytest.importorskip(...) must run before heavy imports in tests.
+"tests/**" = ["E402"]
