@@ -16,6 +16,7 @@ intended architecture; implementation follows them.
 |---|---|
 | [`requirements.md`](requirements.md) | Normative product specification (MUST/SHOULD requirements, v0.1.0 acceptance criteria) |
 | [`architecture.md`](architecture.md) | Technical design: repository layout, components, parity strategy, implementation phases |
+| [`PARITY_BASELINES.md`](PARITY_BASELINES.md) | Machine-readable pins for upstream code revisions, checkpoint revisions, and tolerance results |
 
 `requirements.md` wins on any conflict.
 

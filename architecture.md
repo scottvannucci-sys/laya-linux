@@ -74,6 +74,7 @@ No public-internet dependency or cloud fallback.
 ├── README.md
 ├── requirements.md
 ├── architecture.md
+├── PARITY_BASELINES.md
 ├── LICENSE
 ├── NOTICE
 ├── pyproject.toml
@@ -126,7 +127,9 @@ No public-internet dependency or cloud fallback.
 ```
 
 The layout may evolve, but core inference MUST remain importable without importing server or
-network-client modules.
+network-client modules. Note that `email.py` is naming inherited from Laya-MLX: it contains
+email-domain question presets and performs no network operations and no email-sending
+capability.
 
 ## 5. Component responsibilities
 
@@ -268,6 +271,10 @@ Proposed manifest shape:
 ```
 
 The final schema must be versioned and covered by fixtures before publication.
+The manifest's `license` field MUST record the checkpoint's license as
+verified from its model card at packaging time; it MUST NOT be assumed to
+match the runtime's license. Upstream checkpoint revisions are pinned in
+`PARITY_BASELINES.md`.
 
 ### 5.7 `devices.py`
 
@@ -421,6 +428,11 @@ Define library exceptions and equivalent API error codes:
 
 Errors should include a safe human-readable explanation and a stable code. They must not include
 request bodies, tokens, or sensitive environment data.
+
+Protocol versions are non-negative integers owned by `protocol.py` and pinned by
+`PARITY_BASELINES.md`-style fixtures rather than by prose. The current protocol version is 1. A
+version bump requires a compatibility note in the changelog and explicit negotiation or rejection
+behavior on both client and server sides, per requirements §12.
 
 ## 8. Configuration model
 
@@ -579,7 +591,8 @@ An implementation agent should follow these phases and should not optimize ahead
 ### Phase 0: repository foundation
 
 1. Add Apache-2.0 license and accurate `NOTICE` material.
-2. Create `pyproject.toml`, `src/` package layout, linting, test configuration, and Ubuntu CPU CI.
+2. Create `pyproject.toml`, `src/` package layout, linting, test configuration, and GitHub
+   Actions Ubuntu CPU CI (see requirements §11.5).
 3. Add error types and public protocol definitions.
 4. Add a minimal README stating that no working release exists yet if appropriate.
 

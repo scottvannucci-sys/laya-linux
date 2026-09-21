@@ -27,7 +27,11 @@ Neither mode may require the public internet during normal operation.
 
 The implementation is informed by these Apache-2.0 projects:
 
-- Laya: <https://github.com/NandhaKishorM/laya>
+- Laya: <https://github.com/NandhaKishorM/laya>. This is the canonical Laya
+  GitHub repository. Convai Innovations publishes the model checkpoints on
+  Hugging Face (<https://huggingface.co/convaiinnovations>) and has no GitHub
+  organization; identifiers such as `convaiinnovations/laya` MUST NOT be
+  presented as GitHub repositories.
 - Laya-MLX: <https://github.com/mizorewww/laya-mlx>
 
 The initial investigation used:
@@ -309,6 +313,13 @@ The project SHOULD provide one `laya-linux` executable with these initial comman
 Commands MUST work without contacting the internet. Diagnostic output MUST distinguish verified
 facts from suggestions and MUST not expose secrets.
 
+## 11.5 Continuous integration
+
+CI runs on GitHub Actions with Ubuntu runners. Every pull request MUST run the CPU test suite on
+GitHub Actions; the workflow is part of the repository so agents can extend it alongside tests.
+GPU validation remains a separately identified, manually triggered job per requirements §13 —
+GitHub Actions runners provide no CUDA or ROCm hardware.
+
 ## 12. Reliability and compatibility requirements
 
 - Inference MUST run under `torch.inference_mode()` or an equivalent no-gradient mode.
@@ -331,7 +342,7 @@ The test suite MUST include:
 - Real-checkpoint integration tests for every officially supported checkpoint.
 - FP32 selected-answer parity tests.
 - Documented FP16 and BF16 probability-error tolerances.
-- CPU tests on every pull request.
+- CPU tests on every pull request (GitHub Actions Ubuntu runners, §11.5).
 - CUDA tests when suitable hardware is available.
 - ROCm tests before ROCm support is declared stable.
 - Tests with network/socket access blocked.
@@ -385,6 +396,8 @@ The repository MUST eventually include:
 - CPU, CUDA, and ROCm setup pages.
 - Threat model and privacy statement.
 - Model provenance and licensing documentation.
+- A parity-baseline record (`PARITY_BASELINES.md`) pinning upstream source revisions, checkpoint
+  revisions, and tolerance results.
 - API reference and example payloads.
 - Benchmark methodology and published raw results.
 - Troubleshooting for insufficient RAM/VRAM, unsupported devices, corrupt models, and unavailable
