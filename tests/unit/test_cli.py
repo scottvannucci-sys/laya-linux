@@ -89,5 +89,8 @@ def test_benchmark_emits_json(capsys, tiny_pkg):
     assert "do not compare" in payload["note"]
 
 
-def test_serve_is_phase4_placeholder(capsys):
-    assert main(["serve"]) == 2
+def test_serve_without_models_fails_configured(capsys):
+    # Real Phase 4 server: no --model means an invalid config -> structured error
+    assert main(["serve"]) == 1
+    payload = json.loads(capsys.readouterr().err)
+    assert payload["error_code"] == "SERVER_CONFIG_INVALID"

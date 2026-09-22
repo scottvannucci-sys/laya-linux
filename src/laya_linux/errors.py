@@ -63,3 +63,52 @@ class NetworkDisabledError(LayaError):
     """
 
     code = "NETWORK_DISABLED"
+
+
+# --- server/client protocol error codes (requirements §8, architecture §7) ---
+
+
+class UnauthorizedError(LayaError):
+    code = "UNAUTHORIZED"
+
+
+class RequestTooLargeError(LayaError):
+    code = "REQUEST_TOO_LARGE"
+
+
+class QueueFullError(LayaError):
+    code = "QUEUE_FULL"
+
+
+class ServerBusyError(LayaError):
+    code = "SERVER_BUSY"
+
+
+class ProtocolUnsupportedError(LayaError):
+    code = "PROTOCOL_UNSUPPORTED"
+
+
+class ServerUnavailableError(LayaError):
+    """The configured server could not be reached (connection refused/unreachable)."""
+
+    code = "SERVER_UNAVAILABLE"
+
+
+class RequestTimeoutError(LayaError):
+    """The server did not answer within the client's deadline."""
+
+    code = "REQUEST_TIMEOUT"
+
+
+class ResponseTooLargeError(LayaError):
+    """The server's response exceeded the client's maximum response size."""
+
+    code = "RESPONSE_TOO_LARGE"
+
+
+class UnsupportedMediaTypeError(LayaError):
+    code = "UNSUPPORTED_MEDIA_TYPE"
+
+
+class MalformedRequestError(LayaError):
+    code = "MALFORMED_REQUEST"

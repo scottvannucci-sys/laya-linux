@@ -208,13 +208,35 @@ def cmd_benchmark(args: argparse.Namespace) -> int:
     return 0
 
 
-def cmd_serve(_args: argparse.Namespace) -> int:
-    print(
-        "serve: the private server arrives in Phase 4 (architecture §14). The embedded "
-        "runtime and the verify/doctor/benchmark commands are available today.",
-        file=sys.stderr,
+def cmd_serve(args: argparse.Namespace) -> int:
+    from .server.app import run_server
+    from .server.config import ServerConfig
+
+    models: dict[str, str] = {}
+    for pair in args.model or []:
+        alias, _, path = pair.partition("=")
+        if not _:
+            raise SystemExit(f"error: --model expects alias=path, got {pair!r}")
+        models[alias.strip()] = path.strip()
+    config = ServerConfig(
+        models=models,
+        host=args.host,
+        port=args.port,
+        unix_socket=args.unix_socket,
+        token_file=args.token_file,
+        device=args.device,
+        dtype=args.dtype,
+        max_request_bytes=args.max_request_bytes,
+        max_questions=args.max_questions,
+        max_options=args.max_options,
+        queue_capacity=args.queue_capacity,
+        concurrency=args.concurrency,
+        execution_timeout=args.execution_timeout,
+        preload=args.preload,
+        access_log=not args.no_access_log,
     )
-    return 2
+    run_server(config, access_log=not args.no_access_log)
+    return 0
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -258,7 +280,24 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--preset", choices=sorted(PRESETS), help="use a built-in question preset")
     p.set_defaults(func=cmd_benchmark)
 
-    p = sub.add_parser("serve", help="start the private inference server (Phase 4)")
+    p = sub.add_parser("serve", help="start the private inference server (loopback by default)")
+    p.add_argument("--model", action="append", metavar="ALIAS=PATH",
+                   help="model alias to local package path (repeatable)")
+    p.add_argument("--host", default="127.0.0.1",
+                   help="TCP host to bind (default 127.0.0.1; non-loopback requires --token-file)")
+    p.add_argument("--port", type=int, default=8142)
+    p.add_argument("--unix-socket", default=None, help="Unix socket path (overrides --host/--port)")
+    p.add_argument("--token-file", default=None, help="bearer token file (required for non-loopback)")
+    p.add_argument("--device", default=None)
+    p.add_argument("--dtype", default="auto")
+    p.add_argument("--max-request-bytes", type=int, default=1 * 1024 * 1024)
+    p.add_argument("--max-questions", type=int, default=64)
+    p.add_argument("--max-options", type=int, default=256)
+    p.add_argument("--queue-capacity", type=int, default=64)
+    p.add_argument("--concurrency", type=int, default=1)
+    p.add_argument("--execution-timeout", type=float, default=60.0)
+    p.add_argument("--preload", action="store_true", help="load models at startup")
+    p.add_argument("--no-access-log", action="store_true", help="disable the redacted access log")
     p.set_defaults(func=cmd_serve)
     return parser
 

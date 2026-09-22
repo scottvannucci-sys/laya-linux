@@ -6,12 +6,13 @@ supplied state in a single bidirectional model forward pass and returns
 calibrated probabilities without generating text — entirely on your hardware,
 with no cloud calls, telemetry, or downloads.
 
-**Status: Phases 1–3 complete — CPU and CUDA runtimes with verified reference parity.** The FP32
+**Status: Phases 1–4 complete — CPU + CUDA runtimes, packaging/CLI, and the private server.** The FP32
 CPU runtime matches Hugging Face transformers' ModernBERT and upstream Laya's `DecisionModel` to
 **0.0 max difference**; CUDA is validated on RTX 5070 Ti (sm_120) with FP32 bit-identical to CPU
-and FP16/BF16 drift tolerances recorded. See [`PARITY_BASELINES.md`](PARITY_BASELINES.md) and
-`benchmarks/`. The `laya-linux` CLI (predict/verify/doctor/benchmark), manifest packaging, and
-air-gapped installation are done; the private server is next (architecture §14 Phase 4).
+and FP16/BF16 drift tolerances recorded (see [`PARITY_BASELINES.md`](PARITY_BASELINES.md) and
+`benchmarks/`). `laya-linux serve` exposes the private JSON API (loopback/Unix-socket/private-LAN
+with auth; see [`docs/server.md`](docs/server.md)), and the PyTorch-free `RemoteAgent` client
+implements the same prediction interface over the standard library only.
 
 ## Documents
 
