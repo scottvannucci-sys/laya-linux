@@ -226,6 +226,7 @@ are plain strings (structured values are JSON-rendered).
 | [`requirements.md`](requirements.md) | Normative product specification (MUST/SHOULD requirements, v0.1.0 acceptance criteria) |
 | [`architecture.md`](architecture.md) | Technical design: repository layout, components, parity strategy, implementation phases |
 | [`PARITY_BASELINES.md`](PARITY_BASELINES.md) | Machine-readable pins for upstream code revisions, checkpoint revisions, and tolerance results |
+| [`benchmarks/README.md`](benchmarks/README.md) | Published-benchmark conventions, artifact index, and reproduction instructions |
 | [`docs/server.md`](docs/server.md) | Private-server deployment: loopback, Unix sockets, private LAN, auth, TLS |
 | [`docs/harness-integration.md`](docs/harness-integration.md) | Hooking laya-linux into an agent harness: tool wrapper, schemas, Hermes/MCP specifics |
 | [`docs/offline-installation.md`](docs/offline-installation.md) | Air-gapped wheelhouse install and model transfer |
