@@ -32,9 +32,8 @@ STATE = {"message": "I was charged twice on my last invoice."}
 
 
 def test_real_checkpoint_loads_with_sockets_blocked():
-    from conftest import SocketBlocker
-
     import laya_linux
+    from conftest import SocketBlocker
 
     with SocketBlocker() as blocker:
         agent = laya_linux.load(str(REAL_CHECKPOINT), device="cpu")

@@ -41,6 +41,9 @@ dev = [
 [project.urls]
 Repository = "https://github.com/scottvannucci-sys/laya-linux"
 
+[project.scripts]
+laya-linux = "laya_linux.cli:main"
+
 [tool.setuptools.packages.find]
 where = ["src"]
 

@@ -5,6 +5,7 @@ __pycache__/
 .eggs/
 build/
 dist/
+wheelhouse/
 .venv/
 venv/
 .pytest_cache/

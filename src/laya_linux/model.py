@@ -283,6 +283,48 @@ def build_decision_model(
     return DecisionModel(enc, head_layers=head_layers, n_act=n_act)
 
 
+def verify_weights(model: DecisionModel, weights: dict[str, torch.Tensor]) -> None:
+    """Strict checkpoint verification before any weight is trusted (requirements §9).
+
+    Shared by the Agent loading path and the offline ``verify`` command. Checks
+    component presence, exact name coverage, and tensor shapes.
+    """
+    REQUIRED_WEIGHT_PREFIXES = ("encoder.", "head.", "type_emb.", "scorer.", "act_head.", "temperature")
+    state_names = set(model.state_dict().keys())
+    weight_names = set(weights.keys())
+    for prefix in REQUIRED_WEIGHT_PREFIXES:
+        if not any(name.startswith(prefix) for name in weight_names):
+            raise ModelIncompatibleError(
+                f"Checkpoint is missing {prefix!r} parameters; "
+                f"expected a Laya decision model with encoder and decision heads"
+            )
+    missing = sorted(state_names - weight_names)
+    if missing:
+        preview = ", ".join(missing[:5])
+        raise ModelIncompatibleError(
+            f"Model weights incomplete: missing {len(missing)} parameter tensors (e.g. {preview})"
+        )
+    unexpected = sorted(weight_names - state_names)
+    if unexpected:
+        preview = ", ".join(unexpected[:5])
+        raise ModelIncompatibleError(
+            f"Checkpoint contains {len(unexpected)} parameters the architecture does not define "
+            f"(e.g. {preview}); refusing to load an incompatible model"
+        )
+    mismatches = []
+    for name, param in model.state_dict().items():
+        supplied = weights[name]
+        if tuple(supplied.shape) != tuple(param.shape):
+            mismatches.append(f"{name}: expected {tuple(param.shape)}, found {tuple(supplied.shape)}")
+    if mismatches:
+        preview = "\n".join("  - " + m for m in mismatches[:5])
+        more = f"\n  ... and {len(mismatches) - 5} more mismatched tensors." if len(mismatches) > 5 else ""
+        raise ModelIncompatibleError(
+            f"Model architecture mismatch:\n{preview}{more}\n"
+            f"The checkpoint weights do not match the configured model architecture."
+        )
+
+
 def expected_parameter_names(head_layers: int = 2) -> set[str]:
     """Parameter/buffer names the architecture requires from a checkpoint."""
     import itertools
