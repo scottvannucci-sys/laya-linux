@@ -30,6 +30,12 @@ SRC = Path(__file__).resolve().parents[1] / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
+# Reduce allocator fragmentation across the many load/free cycles below; must
+# be set before torch is imported.
+import os  # noqa: E402
+
+os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
+
 import torch  # noqa: E402
 
 from laya_linux import Agent  # noqa: E402
@@ -73,6 +79,36 @@ QUESTIONS = {
 # near-tied: choice/score top-2 probability gap or the noul tie margin below
 # this threshold. Documented with the tolerance table in PARITY_BASELINES.md.
 NEAR_TIE_MARGIN = 0.05
+
+
+def _cuda_mem_state() -> dict:
+    """Free/total GPU memory in MB (real numbers even when nvidia-smi says N/A)."""
+    free, total = torch.cuda.mem_get_info()
+    return {"free_mb": round(free / 1e6, 1), "total_mb": round(total / 1e6, 1)}
+
+
+def _load_cuda_agent(model_path: Path, dtype: str) -> Agent:
+    """Load a CUDA agent with an OOM-retry: collect, empty cache, retry once."""
+    import gc
+
+    gc.collect()
+    torch.cuda.empty_cache()
+    try:
+        return Agent(str(model_path), device="cuda:0", dtype=dtype)
+    except RuntimeError as exc:
+        if "out of memory" not in str(exc).lower():
+            raise
+        before = _cuda_mem_state()
+        gc.collect()
+        torch.cuda.empty_cache()
+        print(
+            f"WARNING: CUDA OOM during load (free={before['free_mb']}MB). "
+            f"Retrying once after cache reset; if this fails, another process is "
+            f"holding GPU memory (see nvidia-smi process list) or the driver needs "
+            f"a reboot after an earlier abnormal termination.",
+            flush=True,
+        )
+        return Agent(str(model_path), device="cuda:0", dtype=dtype)
 
 
 def run_fixtures(agent: Agent) -> list[dict]:
@@ -229,8 +265,8 @@ def main() -> int:
     # ---- per-dtype CUDA validation ----
     for dtype in ("float32", "float16", "bfloat16"):
         label = f"cuda_{dtype}"
-        print(f"validating {label}...", flush=True)
-        agent = Agent(str(model_path), device="cuda:0", dtype=dtype)
+        print(f"validating {label}... (GPU memory before load: {_cuda_mem_state()})", flush=True)
+        agent = _load_cuda_agent(model_path, dtype)
         outputs = run_fixtures(agent)
         report["parity"][label] = drift_vs_reference(reference, outputs)
 
