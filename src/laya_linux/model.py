@@ -107,21 +107,24 @@ def apply_rope(x: torch.Tensor, base: float) -> torch.Tensor:
     return (x * cos) + (_rotate_half(x) * sin)
 
 
-def attention_masks(attention_mask: torch.Tensor, window: int) -> dict[str, torch.Tensor]:
+def attention_masks(attention_mask: torch.Tensor, window: int, dtype: torch.dtype | None = None) -> dict[str, torch.Tensor]:
     """Additive float attention masks for full and sliding layers.
 
-    Padded queries keep access to valid keys so no softmax row is fully masked
-    (architecture §5.3: padded query rows must remain finite). Padded tokens
-    are never usable as keys, so valid-token results are unchanged.
+    Built in the encoder's activation dtype (FP32 masks alongside FP16
+    activations are rejected by CUDA SDPA). Padded queries keep access to
+    valid keys so no softmax row is fully masked (architecture §5.3: padded
+    query rows must remain finite). Padded tokens are never usable as keys,
+    so valid-token results are unchanged.
     """
+    dt = dtype or torch.float32
     valid = attention_mask.to(dtype=torch.bool)
     b, length = valid.shape
     positions = torch.arange(length, device=valid.device)
     dist = (positions[:, None] - positions[None, :]).abs()
     key_valid = valid[:, None, None, :]          # [B,1,1,L]: padded keys are never usable
     padded_query_access = ~valid[:, None, :, None]  # [B,1,L,1]: padded queries stay finite
-    neg = torch.finfo(torch.float32).min
-    full = torch.zeros((b, 1, length, length), dtype=torch.float32, device=valid.device)
+    neg = torch.finfo(dt).min
+    full = torch.zeros((b, 1, length, length), dtype=dt, device=valid.device)
     full = full.masked_fill(~key_valid, neg)
     local_window = (dist <= window // 2)[None, None]  # [1,1,L,L]: inclusive boundary
     local_allowed = (local_window | padded_query_access) & key_valid
@@ -200,7 +203,7 @@ class ModernBert(nn.Module):
 
     def forward(self, input_ids: torch.Tensor, attention_mask: torch.Tensor) -> torch.Tensor:
         x = self.embeddings(input_ids)
-        masks = attention_masks(attention_mask, self.config.local_attention)
+        masks = attention_masks(attention_mask, self.config.local_attention, dtype=x.dtype)
         for layer in self.layers:
             x = layer(x, masks)
         return self.final_norm(x)
@@ -267,7 +270,11 @@ class DecisionModel(nn.Module):
         top2 = p.topk(2, -1).values
         feats = torch.stack([top2[:, 0], top2[:, 0] - top2[:, 1], ent, k / 255.0], -1)
         pooled = h[:, 0].float()
-        act_logits = self.act_head(torch.cat([pooled, feats], -1))
+        # Act-head features are probability-derived and assembled in float32;
+        # they are cast to the head's weight dtype at the boundary (upstream
+        # achieves this via autocast, the MLX port via an explicit ast()).
+        act_input = torch.cat([pooled, feats], -1).to(self.act_head[0].weight.dtype)
+        act_logits = self.act_head(act_input)
         return logits, act_logits
 
 

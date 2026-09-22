@@ -39,12 +39,16 @@ def select_device(
     dtype: str = "auto",
     *,
     cpu_default_dtype: torch.dtype = torch.float32,
+    checkpoint_amp_dtype: str | None = None,
 ) -> DevicePlan:
     """Resolve an explicit or automatic device request into a concrete plan.
 
     - ``device="auto"`` selects an available accelerator, else CPU.
     - Explicit requests either use that device or fail with ``DEVICE_UNAVAILABLE``;
       they never silently move work elsewhere (requirements §10.2).
+    - ``checkpoint_amp_dtype`` (the checkpoint's recorded training dtype, e.g.
+      "bf16") is the automatic GPU precision when the device supports it,
+      matching upstream behavior; otherwise the capability-based default applies.
     """
     requested = device or "auto"
     if requested == "auto":
@@ -52,7 +56,9 @@ def select_device(
             count = torch.cuda.device_count()
             backend = "rocm" if _is_rocm_build() else "cuda"
             name = torch.cuda.get_device_name(0)
-            plan_dtype = _resolve_dtype(dtype, torch.float16, allow_bfloat16=_cuda_bf16_ok())
+            bf16_ok = _cuda_bf16_ok()
+            accelerator_default = _capability_default(checkpoint_amp_dtype, allow_bfloat16=bf16_ok)
+            plan_dtype = _resolve_dtype(dtype, accelerator_default, allow_bfloat16=bf16_ok)
             return DevicePlan(
                 torch.device("cuda"),
                 backend,
@@ -80,7 +86,9 @@ def select_device(
                 "(torch.cuda.is_available() is False). Verify the CUDA-enabled PyTorch build and driver."
             )
         backend = "rocm" if _is_rocm_build() else "cuda"
-        plan_dtype = _resolve_dtype(dtype, torch.float16, allow_bfloat16=_cuda_bf16_ok())
+        bf16_ok = _cuda_bf16_ok()
+        accelerator_default = _capability_default(checkpoint_amp_dtype, allow_bfloat16=bf16_ok)
+        plan_dtype = _resolve_dtype(dtype, accelerator_default, allow_bfloat16=bf16_ok)
         return DevicePlan(target, backend, plan_dtype, f"explicit request honored: {target} (backend={backend})")
     if target.type == "cpu":
         if dtype in ("float16", "bfloat16"):
@@ -92,6 +100,18 @@ def select_device(
     raise DeviceUnavailableError(
         f"Unsupported device {requested!r}; supported values are 'auto', 'cpu', and 'cuda[:n]'."
     )
+
+
+def _capability_default(checkpoint_amp_dtype: str | None, *, allow_bfloat16: bool) -> torch.dtype:
+    """Automatic GPU precision: the checkpoint's recorded dtype when supported, else FP16.
+
+    Accepts both spellings ("bf16" is upstream's canonical abbreviation in
+    rl_agent_config.json's amp_dtype field).
+    """
+    normalized = (checkpoint_amp_dtype or "").lower()
+    if normalized in ("bfloat16", "bf16") and allow_bfloat16:
+        return torch.bfloat16
+    return torch.float16
 
 
 def _cuda_bf16_ok() -> bool:

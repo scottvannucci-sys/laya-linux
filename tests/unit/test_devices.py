@@ -47,3 +47,15 @@ def test_explanation_is_safe():
 def test_describe_shape():
     d = select_device("cpu").describe()
     assert set(d) == {"device", "backend", "dtype", "explanation"}
+
+
+def test_checkpoint_amp_dtype_hint_normalized():
+    """The checkpoint's amp_dtype spelling ("bf16") drives the auto GPU default."""
+    from laya_linux.devices import _capability_default
+
+    assert _capability_default("bf16", allow_bfloat16=True) is torch.bfloat16
+    assert _capability_default("bfloat16", allow_bfloat16=True) is torch.bfloat16
+    assert _capability_default("bf16", allow_bfloat16=False) is torch.float16
+    assert _capability_default("float16", allow_bfloat16=True) is torch.float16
+    assert _capability_default(None, allow_bfloat16=True) is torch.float16
+    assert _capability_default("garbage", allow_bfloat16=True) is torch.float16

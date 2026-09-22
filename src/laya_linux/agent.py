@@ -80,7 +80,7 @@ class Agent:
         self.model.load_state_dict(weights, strict=True)
         del weights
 
-        plan: DevicePlan = select_device(device, dtype)
+        plan: DevicePlan = select_device(device, dtype, checkpoint_amp_dtype=self.cfg.get("amp_dtype"))
         self.device = plan.device
         self.dtype = plan.dtype
         if self.device.type == "cpu":

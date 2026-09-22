@@ -1,0 +1,84 @@
+{
+  "environment": {
+    "gpu": "NVIDIA GeForce RTX 5070 Ti",
+    "compute_capability": "sm_120",
+    "torch": "2.11.0+cu128",
+    "torch_cuda": "12.8",
+    "driver_hint": "see nvidia-smi on the validation machine",
+    "python": "3.11.16",
+    "platform": "Windows-10-10.0.26200-SP0"
+  },
+  "dtype_policies": {
+    "auto_selects_cuda": true,
+    "auto_dtype": "float16",
+    "cpu_bf16_correctly_rejected": true
+  },
+  "parity": {
+    "cuda_float32": {
+      "selected_answer_agreement": "30/30",
+      "agreement_rate": 1.0,
+      "max_probability_diff": 0.0,
+      "mean_probability_diff": 0.0,
+      "fixture_count": 6,
+      "question_count": 5
+    },
+    "cuda_float16": {
+      "selected_answer_agreement": "30/30",
+      "agreement_rate": 1.0,
+      "max_probability_diff": 0.0014,
+      "mean_probability_diff": 0.00017051,
+      "fixture_count": 6,
+      "question_count": 5
+    },
+    "cuda_bfloat16": {
+      "selected_answer_agreement": "30/30",
+      "agreement_rate": 1.0,
+      "max_probability_diff": 0.0078,
+      "mean_probability_diff": 0.00112692,
+      "fixture_count": 6,
+      "question_count": 5
+    }
+  },
+  "stability": {
+    "cuda_float32": {
+      "repeat_identical": true,
+      "growth_mb_over_30_calls": 0.0,
+      "peak_memory_mb": 1666.9
+    },
+    "cuda_float16": {
+      "repeat_identical": true,
+      "growth_mb_over_30_calls": 0.0,
+      "peak_memory_mb": 1644.8
+    },
+    "cuda_bfloat16": {
+      "repeat_identical": true,
+      "growth_mb_over_30_calls": 0.0,
+      "peak_memory_mb": 837.7
+    }
+  },
+  "benchmarks": {
+    "cuda_float32": {
+      "median_ms": 34.8,
+      "p95_ms": 35.51,
+      "min_ms": 33.92,
+      "max_ms": 37.67,
+      "iterations": 20
+    },
+    "cuda_float16": {
+      "median_ms": 21.11,
+      "p95_ms": 24.86,
+      "min_ms": 18.97,
+      "max_ms": 25.72,
+      "iterations": 20
+    },
+    "cuda_bfloat16": {
+      "median_ms": 21.24,
+      "p95_ms": 24.58,
+      "min_ms": 19.37,
+      "max_ms": 26.8,
+      "iterations": 20
+    }
+  },
+  "model": "models\\laya-typed-decisions",
+  "gate": "PASS"
+}

@@ -84,5 +84,10 @@ with hardware and software metadata per architecture §10.
 | FP32 encoder parity vs transformers ModernBERT | **pass** | 0.000e+00 on valid positions, tiny and full-scale (28-layer, padded batches) | x86-64 CPU | 2026-09-21 |
 | FP32 full-model parity vs upstream laya DecisionModel | **pass** | 0.000e+00 logits and action values, all question types | x86-64 CPU | 2026-09-21 |
 | Padding invariance | **pass** | < 1e-6 (float nondeterminism only; same-kernel results identical) | x86-64 CPU | 2026-09-21 |
-| FP16 selected-answer parity | not yet run | TBD | — | — |
-| BF16 selected-answer parity | not yet run | TBD | — | — |
+| CUDA FP32 selected-answer parity vs CPU FP32 | **pass** | 30/30 fixtures; max probability diff 0.000e+00 | RTX 5070 Ti sm_120, torch 2.11.0+cu128, driver 616.92, Windows | 2026-09-21 |
+| CUDA FP16 drift vs CPU FP32 | **pass** | 30/30 selected answers; max diff 1.4e-03, mean 1.7e-04 | RTX 5070 Ti sm_120, torch 2.11.0+cu128 | 2026-09-21 |
+| CUDA BF16 drift vs CPU FP32 | **pass** | 30/30 selected answers; max diff 7.8e-03, mean 1.1e-03 | RTX 5070 Ti sm_120, torch 2.11.0+cu128 | 2026-09-21 |
+| CUDA memory stability | **pass** | 0.0 MB active growth over 30 calls per dtype; repeat-deterministic | RTX 5070 Ti sm_120 (peak 1.67GB FP32 / 1.64GB FP16 / 0.84GB BF16) | 2026-09-21 |
+| FP16 CPU selected-answer parity | not supported | CPU runtime is FP32-only in 0.1.x (DTYPE_UNSUPPORTED by design) | — | — |
+| BF16 CPU selected-answer parity | not supported | CPU runtime is FP32-only in 0.1.x (DTYPE_UNSUPPORTED by design) | — | — |
+| Linux CUDA validation | pending | run `scripts/linux_cuda_validation.sh`; results recorded here | — | — |
