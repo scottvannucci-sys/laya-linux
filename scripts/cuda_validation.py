@@ -80,6 +80,12 @@ QUESTIONS = {
 # this threshold. Documented with the tolerance table in PARITY_BASELINES.md.
 NEAR_TIE_MARGIN = 0.05
 
+# Score questions compare |ΔE[score]| against this tolerance instead of exact
+# 2-decimal rounding: the expected score is continuous (score = Σ i·p_i), so
+# per-probability drift accumulates — worst case for a k-level rubric is
+# k(k-1)/2 × max_drift ≈ 6 × 0.0078 ≈ 0.047 at the measured BF16 drift.
+SCORE_TOLERANCE = 0.05
+
 
 def _cuda_mem_state() -> dict:
     """Free/total GPU memory in MB (real numbers even when nvidia-smi says N/A)."""
@@ -131,6 +137,7 @@ def drift_vs_reference(reference: list[dict], candidate: list[dict]) -> dict:
     agree = 0
     total = 0
     max_prob_diff = 0.0
+    max_score_delta = 0.0
     prob_diffs: list[float] = []
     disagreements: list[dict] = []
     for fixture_index, (ref_result, cand_result) in enumerate(zip(reference, candidate, strict=True)):
@@ -145,7 +152,12 @@ def drift_vs_reference(reference: list[dict], candidate: list[dict]) -> dict:
                 pairs = list(zip(ref_answer["probabilities"].values(), cand_answer["probabilities"].values(), strict=True))
                 ref_pick, cand_pick = ref_answer["choice"], cand_answer["choice"]
             elif ref_answer["type"] == "score":
-                match = round(ref_answer["score"], 2) == round(cand_answer["score"], 2)
+                # Expected score is continuous; reduced precision shifts it by
+                # up to k(k-1)/2 × per-probability drift. Tolerance, not exact
+                # rounded equality (requirements §13: documented tolerances).
+                delta = abs(ref_answer["score"] - cand_answer["score"])
+                match = delta <= SCORE_TOLERANCE
+                max_score_delta = max(max_score_delta, delta)
                 ref_values = sorted(ref_answer["probabilities"].values(), reverse=True)
                 margin = ref_values[0] - ref_values[1] if len(ref_values) > 1 else 1.0
                 pairs = list(zip(ref_answer["probabilities"].values(), cand_answer["probabilities"].values(), strict=True))
@@ -174,6 +186,7 @@ def drift_vs_reference(reference: list[dict], candidate: list[dict]) -> dict:
         "selected_answer_agreement": f"{agree}/{total}",
         "agreement_rate": round(agree / total, 4) if total else None,
         "max_probability_diff": round(max_prob_diff, 6),
+        "max_score_delta": round(max_score_delta, 6),
         "mean_probability_diff": round(statistics.fmean(prob_diffs), 8) if prob_diffs else None,
         "fixture_count": len(reference),
         "question_count": total // max(1, len(reference)),
@@ -317,7 +330,11 @@ def main() -> int:
     report["gate"] = "PASS" if ok else "FAIL"
     report["gate_criteria"] = {
         "fp32_must_match_exactly": True,
-        "reduced_precision": "disagreements allowed only on near-ties (margin <= 0.05) with max drift <= 0.02",
+        "reduced_precision": (
+            "argmax/noul selections: disagreements allowed only on near-ties "
+            "(margin <= 0.05); score questions: |delta E[score]| <= 0.05; max "
+            "probability drift <= 0.02"
+        ),
         "memory_growth_mb_limit": 50,
     }
 
