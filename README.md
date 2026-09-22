@@ -120,13 +120,26 @@ result = agent.predict(state, questions)     # identical interface and results
 ```
 
 Full deployment guidance (firewall, TLS, limits):
-[`docs/server.md`](docs/server.md).
+[`docs/server.md`](docs/server.md). One-command local setup through model
+staging, verification, and a READY server:
+[`scripts/setup_and_serve.sh`](scripts/setup_and_serve.sh).
 
 ## Hooking into an agent harness (Hermes and friends)
 
 `laya-linux` was designed for autonomous-agent integration: both deployment
-modes satisfy one structural protocol, so harness tools can accept either
-without knowing which is live.
+modes satisfy one structural protocol (`laya_linux.protocol.DecisionAgent`), so
+harness tools can accept either without knowing which is live. A one-command
+local setup that ends with the server READY for harness connections:
+
+```bash
+bash scripts/setup_and_serve.sh          # deps -> model -> verify -> serving
+#   or, backgrounded with a health check:
+bash scripts/setup_and_serve.sh --detach
+```
+
+Detailed integration — tool wrapper, JSON schemas, Hermes/MCP specifics — lives
+in [`docs/harness-integration.md`](docs/harness-integration.md). The short
+version:
 
 ```python
 from laya_linux.protocol import DecisionAgent, PROTOCOL_VERSION
@@ -214,6 +227,7 @@ are plain strings (structured values are JSON-rendered).
 | [`architecture.md`](architecture.md) | Technical design: repository layout, components, parity strategy, implementation phases |
 | [`PARITY_BASELINES.md`](PARITY_BASELINES.md) | Machine-readable pins for upstream code revisions, checkpoint revisions, and tolerance results |
 | [`docs/server.md`](docs/server.md) | Private-server deployment: loopback, Unix sockets, private LAN, auth, TLS |
+| [`docs/harness-integration.md`](docs/harness-integration.md) | Hooking laya-linux into an agent harness: tool wrapper, schemas, Hermes/MCP specifics |
 | [`docs/offline-installation.md`](docs/offline-installation.md) | Air-gapped wheelhouse install and model transfer |
 | [`docs/cpu-setup.md`](docs/cpu-setup.md) / [`docs/cuda-setup.md`](docs/cuda-setup.md) | Per-backend setup and documented hardware configurations |
 | [`docs/release.md`](docs/release.md) | Release checklist: SBOM, clean-install gate, checksums, evidence |
