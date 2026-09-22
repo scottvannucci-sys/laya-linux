@@ -88,6 +88,9 @@ with hardware and software metadata per architecture §10.
 | CUDA FP16 drift vs CPU FP32 | **pass** | 30/30 selected answers; max diff 1.4e-03, mean 1.7e-04 | RTX 5070 Ti sm_120, torch 2.11.0+cu128 | 2026-09-21 |
 | CUDA BF16 drift vs CPU FP32 | **pass** | 30/30 selected answers; max diff 7.8e-03, mean 1.1e-03 | RTX 5070 Ti sm_120, torch 2.11.0+cu128 | 2026-09-21 |
 | CUDA memory stability | **pass** | 0.0 MB active growth over 30 calls per dtype; repeat-deterministic | RTX 5070 Ti sm_120 (peak 1.67GB FP32 / 1.64GB FP16 / 0.84GB BF16) | 2026-09-21 |
+| Linux CUDA FP32 parity vs CPU FP32 (GB10) | **pass** | 30/30 fixtures; max probability diff and max score delta 0.000e+00 | NVIDIA GB10 sm_121, torch 2.11.0+cu128, driver 580.173.02, Linux aarch64 | 2026-09-22 |
+| Linux CUDA FP16 drift vs CPU FP32 (GB10) | **pass** | 30/30 selections; max diff 1.1e-03, max score delta 7e-04 | NVIDIA GB10 sm_121, torch 2.11.0+cu128 | 2026-09-22 |
+| Linux CUDA BF16 drift vs CPU FP32 (GB10) | **pass** | 30/30 selections; max diff 7.8e-03, max score delta 1.35e-02 (score tolerance 0.05) | NVIDIA GB10 sm_121, torch 2.11.0+cu128 | 2026-09-22 |
+| Linux CUDA memory stability (GB10) | **pass** | 0.0 MB active growth over 30 calls per dtype; repeat-deterministic | NVIDIA GB10 unified memory (peak 1.67GB FP32 / 1.64GB FP16 / 0.84GB BF16) | 2026-09-22 |
 | FP16 CPU selected-answer parity | not supported | CPU runtime is FP32-only in 0.1.x (DTYPE_UNSUPPORTED by design) | — | — |
 | BF16 CPU selected-answer parity | not supported | CPU runtime is FP32-only in 0.1.x (DTYPE_UNSUPPORTED by design) | — | — |
-| Linux CUDA validation | pending | run `scripts/linux_cuda_validation.sh`; results recorded here | — | — |

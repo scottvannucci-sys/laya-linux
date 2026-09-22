@@ -47,10 +47,19 @@ repeated-call memory stability, and latency/throughput. On Linux the same batter
 | GPU | Capability | Driver | Torch build | Status |
 |---|---|---|---|---|
 | NVIDIA GeForce RTX 5070 Ti (16GB, Windows 11) | sm_120 | 616.92 | 2.11.0+cu128 | **validated** — see `benchmarks/cuda-validation-win-rtx5070ti.json` |
-| Linux NVIDIA boxes | — | — | cu128 or cu126 line | run `scripts/linux_cuda_validation.sh <model-pkg>` and record the JSON here |
+| NVIDIA GB10 (Grace Blackwell, unified memory, Linux aarch64) | sm_121 | 580.173.02 | 2.11.0+cu128 | **validated** — see `benchmarks/cuda-validation-linux-gb10.json` |
 
 Raw artifacts live in `benchmarks/`. Auto precision on capable GPUs honors the checkpoint's
 recorded `amp_dtype` (the laya-typed-decisions checkpoint records `bf16`).
+
+### Gate criteria (recorded in every artifact)
+
+- FP32 CUDA must match the CPU FP32 reference exactly (argmax, noul threshold, probabilities).
+- Reduced-precision dtypes: argmax/noul selections may disagree only where the FP32 reference
+  itself was near-tied (top-2 gap or tie margin ≤ 0.05); score questions use
+  `|ΔE[score]| ≤ 0.05` (the expected score is continuous — Σ i·p_i — so per-probability drift
+  accumulates); max probability drift ≤ 0.02.
+- Memory: < 50 MB active growth over 30 repeated calls; per-dtype results repeat-identically.
 
 ## torch.compile (opt-in evaluation, architecture §14 Phase 3 step 5)
 
