@@ -161,6 +161,11 @@ def cmd_benchmark(args: argparse.Namespace) -> int:
         "batch_size": args.batch_size,
         "warmup": args.warmup,
         "iterations": args.iterations,
+        # Workload identity (requirements §14): same numbers with a fresh
+        # process must reproduce the same distribution.
+        "input_length_chars": len(state if isinstance(state, str) else json.dumps(state, ensure_ascii=False)),
+        "question_count": len(questions),
+        "question_ids": sorted(questions),
     }
 
     samples: list[float] = []
