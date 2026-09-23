@@ -26,11 +26,27 @@ _CTX = None  # PluginContext, captured at register() for settings access
 
 
 def _vendored(name: str):
-    """Import a vendored module (client/protocol/errors/presets) from this dir."""
+    """Import a vendored module (client/protocol/errors/presets) from this dir.
+
+    Vendored modules use absolute sibling imports ("from errors import ..."),
+    which only resolve when this plugin dir is importable. Importing via
+    spec_from_file_location alone provides no package context, so put the dir
+    on sys.path for the duration of the import.
+    """
+    import sys
+
+    plugin_dir = str(_PLUGIN_DIR)
     spec = importlib.util.spec_from_file_location(
         f"laya_hermes_plugin._{name}", _PLUGIN_DIR / f"{name}.py")
     module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
+    sys.path.insert(0, plugin_dir)
+    try:
+        spec.loader.exec_module(module)
+    finally:
+        try:
+            sys.path.remove(plugin_dir)
+        except ValueError:
+            pass
     return module
 
 
