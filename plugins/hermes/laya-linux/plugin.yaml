@@ -1,0 +1,32 @@
+name: laya-linux
+version: 0.1.0
+description: Typed-decision inference via a local laya-linux runtime — structured choice/score/boolean decisions from a local, offline-first model server
+author: scottvannucci-sys
+license: Apache-2.0
+homepage: https://github.com/scottvannucci-sys/laya-linux
+tags: [inference, decisions, classification, local-llm, offline]
+provides_tools:
+  - laya_predict
+  - laya_presets
+  - laya_server_status
+config_schema:
+  server_url:
+    type: str
+    default: "http://127.0.0.1:8142"
+    description: "laya-linux server base URL (loopback by default; see scripts/setup_and_serve.sh)"
+  token_file:
+    type: str
+    default: ""
+    description: "Path to the bearer-token file written by setup_and_serve.sh (LAYA_TOKEN=... form accepted). Leave empty for token-less loopback servers."
+  model:
+    type: str
+    default: ""
+    description: "Model alias override. Empty = let the server use its default alias (see .laya/ready.json from setup_and_serve.sh)"
+  preset:
+    type: str
+    default: "triage"
+    description: "Default question preset for laya_predict when none is given"
+  timeout:
+    type: float
+    default: 30.0
+    description: "Request timeout in seconds"
