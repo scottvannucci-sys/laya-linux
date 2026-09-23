@@ -37,7 +37,7 @@ _ERROR_CLASSES = {}
 
 
 def _error_for(code: str, message: str) -> LayaError:
-    from errors import E  # vendored
+    import errors as E  # vendored
 
     mapping = {
         "UNAUTHORIZED": E.UnauthorizedError,

@@ -26,6 +26,7 @@ models/
 .env
 *.token
 secrets/
+.laya/
 
 # Generated benchmark bulk data (summaries may be committed deliberately)
 benchmarks/results/raw/
