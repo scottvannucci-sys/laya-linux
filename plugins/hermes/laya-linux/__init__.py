@@ -56,7 +56,12 @@ def _settings() -> dict:
         try:
             out = {}
             for key in ("server_url", "token_file", "model", "preset", "timeout"):
-                val = _CTX.get_config(key, default=None)
+                try:
+                    val = _CTX.get_config(key, default=None)
+                except ValueError:
+                    # Reserved config root (e.g. 'model'); skip this key only.
+                    logger.debug("settings key %r rejected by Hermes; skipped", key)
+                    continue
                 if val is not None:
                     out[key] = val
             return out

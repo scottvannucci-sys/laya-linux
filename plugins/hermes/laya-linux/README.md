@@ -36,6 +36,42 @@ server — as an importable Hermes plugin, no hand-written integration needed.
    hermes plugins doctor "$HERMES_HOME/plugins/laya-linux" --ci
    ```
 
+   Then start a new Hermes session (`/reset`, or relaunch `hermes`) — plugin
+   tools and their settings load at session start.
+
+## Server on a separate machine (LAN)
+
+`setup_and_serve.sh` binds loopback, which is only reachable from the same
+host. To serve other machines on your LAN, start the server bound to all
+interfaces — a non-loopback bind requires a token file, which the script
+already writes to `.laya/token`:
+
+```bash
+# on the server machine, from a laya-linux clone
+laya-linux serve --host 0.0.0.0 --port 8142 \
+    --model typed=models/laya-typed-decisions \
+    --token-file .laya/token
+```
+
+On the Hermes machine, copy the token file (never the token value into
+config) and point the plugin at the server:
+
+```bash
+mkdir -p ~/.laya && chmod 700 ~/.laya
+scp server:/path/to/laya-linux/.laya/token ~/.laya/token && chmod 600 ~/.laya/token
+hermes config set plugins.entries.laya-linux.settings.server_url "http://<server-ip>:8142"
+hermes config set plugins.entries.laya-linux.settings.token_file "$HOME/.laya/token"
+```
+
+Notes:
+
+- `.laya/token` is dotenv-format (`LAYA_TOKEN=...`). The client parses it;
+  raw `curl` needs the value only (`cut -d= -f2`).
+- The token is read once at server startup — restart the server after
+  regenerating the file.
+- The server is plain HTTP + bearer token; see `docs/server.md` for the
+  hardening checklist (firewall, TLS termination) beyond a trusted LAN.
+
 ## Tools
 
 | Tool | Purpose |
