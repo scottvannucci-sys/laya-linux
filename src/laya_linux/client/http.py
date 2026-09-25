@@ -110,6 +110,16 @@ class RemoteAgent(DecisionAgent):
             token = Path(token_file).read_text(encoding="utf-8").strip()
             if not token:
                 raise ValueError("Token file is empty")
+            # Accept raw tokens and dotenv-style files (same rule as the
+            # server's BearerAuth), so one secret file serves both sides.
+            if "=" in token and "\n" not in token and token.split("=", 1)[0].strip().upper() in (
+                "TOKEN",
+                "LAYA_TOKEN",
+                "BEARER",
+            ):
+                token = token.split("=", 1)[1].strip().strip('"').strip("'")
+            if not token:
+                raise ValueError("Token file contains no token value")
             self._token = token.encode("utf-8")
         else:
             self._token = None
