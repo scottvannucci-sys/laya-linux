@@ -56,3 +56,41 @@ path; the Phase 2 CLI benchmark on a separate tiny synthetic model measured
 2.7 ms median and is not comparable to either).
 
 Tolerance and parity status for every configuration: `PARITY_BASELINES.md`.
+
+## Decision-quality evals (eval/)
+
+`eval/routing_eval.jsonl` — domain-routing baseline over 300 most-recent `done`
+cards from a real Hermes kanban board (universal-assistant), model
+`models/laya-typed-decisions`, server v0.1.0, router preset. 153 cards were
+scorable (cards assigned to planning/orchestrator profiles have no laya domain
+equivalent and are excluded).
+
+| Metric | Result |
+|---|---|
+| Domain agreement | 150/153 = 98.0% |
+| `code` recall | 150/150 = 100.0% |
+| Class balance | 150 code / 2 data_analysis / 1 writing — **nearly single-class; treat 98% as "recognizes code", not "routes all domains"** |
+| Confidence (all correct answers) | median 0.224, p5–p95 0.121–0.324 |
+
+**Calibration warning:** the routing model's confidence sits far below the
+generic "act above ~0.55" guidance in `docs/harness-integration.md`. On this
+eval, argmax was right 98% of the time while median confidence was 0.22 —
+confidence values are model/checkpoint-specific; measure your own
+distribution (see `scripts/build_routing_eval.py`) before wiring any
+threshold. `act_probability` was not recorded in this run and is unmeasured.
+
+Known server limitation when reproducing: `concurrency: 1` with a 60 s
+execution deadline — batch runs over slow paths need client-side pacing
+(`--sleep`) or `--retry-errors`; ~14% of requests hit the deadline once on
+~2k-char bodies and all succeeded on retry.
+
+Reproduce:
+
+```bash
+python scripts/build_routing_eval.py \
+    --board <your kanban board .db> --limit 300 \
+    --out benchmarks/eval/routing_eval.jsonl --sleep 2
+```
+
+The script is board-agnostic: it maps task assignees to laya domains via the
+`PROFILE_DOMAIN` table at the top — edit it for your own profile names.

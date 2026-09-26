@@ -107,6 +107,15 @@ trustworthy — requirements §8.1):
   immediately instead of unbounded memory growth.
 - `--execution-timeout` bounds each prediction; expired requests get
   `SERVER_BUSY` (the in-flight call finishes and its result is discarded).
+  The default (60 s) is comfortably above the ~100 ms GPU path but real-world
+  batch callers have hit it on ~2k-char states: long states tokenize into
+  many sequences (one per question), and the deadline covers the whole
+  request. Batch callers should pace client-side (`--sleep` in
+  `scripts/build_routing_eval.py`, plus its `--retry-errors`) or raise
+  `--execution-timeout`; single interactive calls are unaffected.
+- The server is `concurrency: 1` by design (one model copy, serialized
+  queue). A client firing requests back-to-back will drive queue depth up and
+  its own requests past the deadline — pace or batch.
 - `--preload` loads models at startup so no request pays the first-load cost.
 
 ## Constrained clients

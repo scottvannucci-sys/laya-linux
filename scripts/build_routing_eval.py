@@ -134,12 +134,13 @@ def main() -> int:
             pred = predict(args.server, token, text, args.client_timeout)
             got = pred["answers"]["domain"]["choice"]
             conf = pred["answers"]["domain"]["confidence"]
+            act = pred["answers"]["domain"].get("action", {}).get("act_probability")
         except Exception as e:
-            got, conf = f"ERROR:{type(e).__name__}", None
+            got, conf, act = f"ERROR:{type(e).__name__}", None, None
         out_rows.append({
             "task_id": t["id"], "assignee": t["assignee"],
             "expected_domain": expected, "predicted_domain": got,
-            "confidence": conf,
+            "confidence": conf, "act_probability": act,
         })
         if args.sleep:
             time.sleep(args.sleep)
@@ -160,6 +161,11 @@ def main() -> int:
         correct = sum(1 for r in scored if r["predicted_domain"] == r["expected_domain"])
         print(f"scored {len(scored)} ({errors} request errors)")
         print(f"agreement: {correct}/{len(scored)} = {correct/len(scored):.1%}")
+        confs = sorted(r["confidence"] for r in scored if r["confidence"] is not None)
+        if confs:
+            n = len(confs)
+            qs = [round(confs[int(n * q)], 3) for q in (0.05, 0.25, 0.5, 0.75, 0.95)]
+            print(f"confidence p5/p25/median/p75/p95: {qs}  (set act thresholds from this, not doc defaults)")
         for dom in sorted({r["expected_domain"] for r in scored}):
             sub = [r for r in scored if r["expected_domain"] == dom]
             c = sum(1 for r in sub if r["predicted_domain"] == dom)

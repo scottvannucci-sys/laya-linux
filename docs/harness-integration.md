@@ -126,6 +126,15 @@ the calling agent:
   confident enough to act" — the model is calibrated, so these numbers are
   meaningful thresholds.
 
+  **Checkpoint-specific caveat:** these thresholds are guidance for
+  professionally-calibrated checkpoints, not universal constants. The
+  `models/laya-typed-decisions` checkpoint measured median confidence 0.224
+  (p5–p95 0.121–0.324) on a routing eval where the argmax was 98% correct
+  (`benchmarks/README.md` → Decision-quality evals). Against this checkpoint,
+  a 0.55 threshold never fires. Measure your own confidence distribution over
+  labeled examples and set thresholds from that distribution — do not assume
+  the doc defaults transfer to your model.
+
 ## Hermes Agent specifics
 
 1. Save the tool wrapper as a skill or plugin tool file; `typed_decision` needs
